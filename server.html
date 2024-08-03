@@ -65,9 +65,12 @@ const deleteChatButton = document.querySelector("#delete-chat-button");
 let userMessage = null;
 let isResponseGenerating = false;
 
-// API configuration
-const API_KEY = "PASTE-YOUR-API-KEY"; // Your API key here
-const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
+// API URLs
+const apiUrls = [
+  { url: 'https://markdevs-last-api.onrender.com/gpt4', params: { prompt: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. " + userMessage, uid: 'your-uid-here' } },
+  { url: 'http://markdevs-last-api.onrender.com/api/v2/gpt4', params: { query: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. " + userMessage } },
+  { url: 'https://markdevs-last-api.onrender.com/api/v3/gpt4', params: { question: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. " + userMessage } }
+];
 
 // Load theme and chat data from local storage on page load
 const loadDataFromLocalstorage = () => {
@@ -118,32 +121,33 @@ const showTypingEffect = (text, textElement, incomingMessageDiv) => {
 const generateAPIResponse = async (incomingMessageDiv) => {
   const textElement = incomingMessageDiv.querySelector(".text"); // Getting text element
 
-  try {
-    // Send a POST request to the API with the user's message
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        contents: [{ 
-          role: "user", 
-          parts: [{ text: userMessage }] 
-        }] 
-      }),
-    });
+  for (const apiUrl of apiUrls) {
+    try {
+      // Send a POST request to the API with the user's message
+      const response = await fetch(apiUrl.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apiUrl.params),
+      });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error.message);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error.message);
 
-    // Get the API response text and remove asterisks from it
-    const apiResponse = data?.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, '$1');
-    showTypingEffect(apiResponse, textElement, incomingMessageDiv); // Show typing effect
-  } catch (error) { // Handle error
-    isResponseGenerating = false;
-    textElement.innerText = error.message;
-    textElement.parentElement.closest(".message").classList.add("error");
-  } finally {
-    incomingMessageDiv.classList.remove("loading");
+      // Get the API response text and remove asterisks from it
+      const apiResponse = data.response.replace(/\*\*(.*?)\*\*/g, '$1');
+      showTypingEffect(apiResponse, textElement, incomingMessageDiv); // Show typing effect
+      break; // Exit the loop if a response is received
+    } catch (error) { // Handle error
+      console.error(error);
+      continue; // Try the next API URL
+    }
   }
+
+  if (!isResponseGenerating) {
+    textElement.innerText = "Failed to get a response from all APIs.";
+    textElement.parentElement.closest(".message").classList.add("error");
+  }
+  incomingMessageDiv.classList.remove("loading");
 }
 
 // Show a loading animation while waiting for the API response
@@ -178,7 +182,7 @@ const copyMessage = (copyButton) => {
 // Handle sending outgoing chat messages
 const handleOutgoingChat = () => {
   userMessage = typingForm.querySelector(".typing-input").value.trim() || userMessage;
-  if(!userMessage || isResponseGenerating) return; // Exit if there is no message or response is generating
+  if (!userMessage || isResponseGenerating) return; // Exit if there is no message or response is generating
 
   isResponseGenerating = true;
 
@@ -226,7 +230,8 @@ typingForm.addEventListener("submit", (e) => {
   handleOutgoingChat();
 });
 
-loadDataFromLocalstorage();</script>
+loadDataFromLocalstorage();
+</script>
 </body>
 </html>
 
