@@ -189,17 +189,6 @@ const generateAPIResponse = async (incomingMessageDiv) => {
   }
 }
 
-// Show a loading animation while waiting for the API response
-const showLoadingAnimation = () => {
-  const html = `<div class="message-content">
-                  <p class="text">Typing<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
-                  <span class="icon material-symbols-rounded hide">insert_emoticon</span>
-                </div>`;
-  const incomingMessageDiv = createMessageElement(html, "incoming", "loading");
-  chatContainer.appendChild(incomingMessageDiv);
-  chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
-  return incomingMessageDiv;
-}
 
 // Handle form submission
 typingForm.addEventListener("submit", async (e) => {
