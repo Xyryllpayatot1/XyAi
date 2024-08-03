@@ -96,7 +96,7 @@
     // Add message to chat history
     const addToChatHistory = (message, sender) => {
       const html = `<div class="message-content">
-                      <img class="avatar" src="${sender === 'Xyai' ? 'images/chatbot.jpg' : 'images/user.jpg'}" alt="${sender} avatar">
+                      <img class="avatar" src="${sender === 'Okeh AI' ? 'images/chatbot.jpg' : 'images/user.jpg'}" alt="${sender} avatar">
                       <p class="text">${message}</p>
                     </div>`;
       const chatMessageDiv = createMessageElement(html, sender === 'Okeh AI' ? "incoming" : "outgoing");
@@ -135,7 +135,7 @@
           throw new Error("Error: Message parameter is missing.");
         }
 
-        if (userMessage.toLowerCase() === "") {
+        if (userMessage.toLowerCase() === "who created you") {
           const creatorResponse = {
             message: "Oh, you're asking about my creator? 🤖 XyryllPanget is the brilliant mind behind me! He's a 15-year-old student from Aliaga, Nueva Ecija, Philippines. Quite impressive, right? 👏",
             status: "success"
@@ -145,14 +145,14 @@
           return;
         }
 
-        if (userMessage.toLowerCase().includes("")) {
+        if (userMessage.toLowerCase().includes("okeh ai")) {
           if (userMessage.toLowerCase().includes("release date")) {
             const releaseDateResponse = {
               message: "Okeh AI was released on August 19, 2023. Feel free to ask anything else you're curious about!",
               status: "success"
             };
             textElement.innerText = releaseDateResponse.message;
-            addToChatHistory(releaseDateResponse.message, "");
+            addToChatHistory(releaseDateResponse.message, "Okeh AI");
             return;
           } else {
             const okehAiResponse = {
