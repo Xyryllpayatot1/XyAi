@@ -56,68 +56,226 @@
   </div>
 
   <script>
+const typingForm = document.querySelector(".typing-form");
+const chatContainer = document.querySelector(".chat-list");
+const suggestions = document.querySelectorAll(".suggestion");
+const toggleThemeButton = document.querySelector("#theme-toggle-button");
+const deleteChatButton = document.querySelector("#delete-chat-button");
+
+// State variables
+let userMessage = null;
+let isResponseGenerating = false;
+
+// Simulated API URL
 const apiEndpoint = 'https://akhiroai.onrender.com/api?model=chatgpt&q=';
 
-// Helper function to get chat history from local storage
-const getChatHistory = () => {
-  return JSON.parse(localStorage.getItem('chatHistory')) || [];
-};
+// Load theme and chat data from local storage on page load
+const loadDataFromLocalstorage = () => {
+  const savedChats = localStorage.getItem("saved-chats");
+  const isLightMode = (localStorage.getItem("themeColor") === "light_mode");
 
-// Helper function to save chat history to local storage
-const saveChatHistory = (chatHistory) => {
-  localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-};
+  // Apply the stored theme
+  document.body.classList.toggle("light_mode", isLightMode);
+  toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
 
-// Function to get response from the API
-const getApiResponse = async (message) => {
-  try {
-    const response = await fetch(`${apiEndpoint}${encodeURIComponent(message)}`);
-    if (!response.ok) throw new Error('Failed to fetch response from the API');
-    const data = await response.json();
-    return data.message || "Unexpected response format from the API.";
-  } catch (error) {
-    console.error(error);
-    return "Error: " + error.message;
-  }
-};
+  // Restore saved chats or clear the chat container
+  chatContainer.innerHTML = savedChats || '';
+  document.body.classList.toggle("hide-header", savedChats);
 
-// Function to handle user message
-const handleUserMessage = async (message) => {
-  let chatHistory = getChatHistory();
-  
-  // Add user message to chat history
-  chatHistory.push({ user: message });
-  
-  // Check for specific user questions or keywords
-  let response;
-  if (message.toLowerCase() === "who created you") {
-    response = "Oh, you're asking about my creator? 🤖 XyryllPanget is the brilliant mind behind me! He's a 15-year-old student from Aliaga, Nueva Ecija, Philippines. Quite impressive, right? 👏";
-  } else if (message.toLowerCase().includes("okeh ai")) {
-    if (message.toLowerCase().includes("release date")) {
-      response = "Okeh AI was released on August 19, 2023. Feel free to ask anything else you're curious about!";
-    } else {
-      response = "Okeh AI is here to assist you! Feel free to ask any questions you have. How can I help you today?";
+  chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
+}
+
+// Create a new message element and return it
+const createMessageElement = (content, ...classes) => {
+  const div = document.createElement("div");
+  div.classList.add("message", ...classes);
+  div.innerHTML = content;
+  return div;
+}
+
+// Show typing effect by displaying words one by one
+const showTypingEffect = (text, textElement, incomingMessageDiv) => {
+  const words = text.split(' ');
+  let currentWordIndex = 0;
+
+  const typingInterval = setInterval(() => {
+    // Append each word to the text element with a space
+    textElement.innerText += (currentWordIndex === 0 ? '' : ' ') + words[currentWordIndex++];
+    incomingMessageDiv.querySelector(".icon").classList.add("hide");
+
+    // If all words are displayed
+    if (currentWordIndex === words.length) {
+      clearInterval(typingInterval);
+      isResponseGenerating = false;
+      incomingMessageDiv.querySelector(".icon").classList.remove("hide");
+      localStorage.setItem("saved-chats", chatContainer.innerHTML); // Save chats to local storage
     }
-  } else if (message.toLowerCase().includes("what time is it")) {
-    const currentTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila', dateStyle: 'full', timeStyle: 'short' });
-    response = `The current time in the Philippines is ${currentTime}.`;
-  } else {
-    // Fetch response from the API
-    response = await getApiResponse(message);
+    chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
+  }, 75);
+}
+
+// Fetch response from the API based on user message
+const generateAPIResponse = async (incomingMessageDiv) => {
+  const textElement = incomingMessageDiv.querySelector(".text"); // Getting text element
+
+  try {
+    // Handle specific cases before sending the request
+    if (!userMessage) {
+      throw new Error("Error: Message parameter is missing.");
+    }
+
+    if (userMessage.toLowerCase() === "who created you") {
+      const creatorResponse = {
+        message: "Oh, you're asking about my creator? 🤖 XyryllPanget is the brilliant mind behind me! He's a 15-year-old student from Aliaga, Nueva Ecija, Philippines. Quite impressive, right? 👏",
+        status: "success"
+      };
+      addToChatHistory(creatorResponse.message, "Okeh AI");
+      textElement.innerText = creatorResponse.message;
+      return;
+    }
+
+    if (userMessage.toLowerCase().includes("okeh ai")) {
+      if (userMessage.toLowerCase().includes("release date")) {
+        const releaseDateResponse = {
+          message: "Okeh AI was released on August 19, 2023. Feel free to ask anything else you're curious about!",
+          status: "success"
+        };
+        addToChatHistory(releaseDateResponse.message, "Okeh AI");
+        textElement.innerText = releaseDateResponse.message;
+        return;
+      } else {
+        const okehAiResponse = {
+          message: "Okeh AI is here to assist you! Feel free to ask any questions you have. How can I help you today?",
+          status: "success"
+        };
+        addToChatHistory(okehAiResponse.message, "Okeh AI");
+        textElement.innerText = okehAiResponse.message;
+        return;
+      }
+    }
+
+    if (userMessage.toLowerCase().includes("what time is it")) {
+      const currentTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila', dateStyle: 'full', timeStyle: 'short' });
+      const timeResponse = {
+        message: `The current time in the Philippines is ${currentTime}.`,
+        status: "success"
+      };
+      addToChatHistory(timeResponse.message, "Okeh AI");
+      textElement.innerText = timeResponse.message;
+      return;
+    }
+
+    // Fetch from external API
+    const response = await fetch(apiEndpoint + encodeURIComponent(userMessage), {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+
+    // Check if the API response contains the expected data
+    if (data.message) {
+      const apiResponse = data.message.replace(/\*\*(.*?)\*\*/g, '$1');
+      showTypingEffect(apiResponse, textElement, incomingMessageDiv); // Show typing effect
+      addToChatHistory(apiResponse, "Okeh AI");
+    } else {
+      textElement.innerText = "Error: Unexpected response format from the API.";
+      incomingMessageDiv.classList.add("error");
+    }
+  } catch (error) { // Handle error
+    isResponseGenerating = false;
+    textElement.innerText = error.message;
+    textElement.parentElement.closest(".message").classList.add("error");
+  } finally {
+    incomingMessageDiv.classList.remove("loading");
   }
+}
 
-  // Add bot response to chat history
-  chatHistory.push({ "Okeh AI": response });
-  saveChatHistory(chatHistory);
+// Show a loading animation while waiting for the API response
+const showLoadingAnimation = () => {
+  const html = `<div class="message-content">
+                  <img class="avatar" src="images/gemini.svg" alt="Gemini avatar">
+                  <p class="text"></p>
+                  <div class="loading-indicator">
+                    <div class="loading-bar"></div>
+                    <div class="loading-bar"></div>
+                    <div class="loading-bar"></div>
+                  </div>
+                </div>
+                <span onClick="copyMessage(this)" class="icon material-symbols-rounded">content_copy</span>`;
 
-  return response;
-};
+  const incomingMessageDiv = createMessageElement(html, "incoming", "loading");
+  chatContainer.appendChild(incomingMessageDiv);
 
-// Example usage
-const message = "What time is it?"; // Replace this with actual user input
-handleUserMessage(message).then(response => {
-  console.log("Response:", response);
+  chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
+  generateAPIResponse(incomingMessageDiv);
+}
+
+// Copy message text to the clipboard
+const copyMessage = (copyButton) => {
+  const messageText = copyButton.parentElement.querySelector(".text").innerText;
+
+  navigator.clipboard.writeText(messageText);
+  copyButton.innerText = "done"; // Show confirmation icon
+  setTimeout(() => copyButton.innerText = "content_copy", 1000); // Revert icon after 1 second
+}
+
+// Handle sending outgoing chat messages
+const handleOutgoingChat = () => {
+  userMessage = typingForm.querySelector(".typing-input").value.trim() || userMessage;
+  if(!userMessage || isResponseGenerating) return; // Exit if there is no message or response is generating
+
+  isResponseGenerating = true;
+
+  const html = `<div class="message-content">
+                  <img class="avatar" src="images/user.jpg" alt="User avatar">
+                  <p class="text"></p>
+                </div>`;
+
+  const outgoingMessageDiv = createMessageElement(html, "outgoing");
+  outgoingMessageDiv.querySelector(".text").innerText = userMessage;
+  chatContainer.appendChild(outgoingMessageDiv);
+  
+  typingForm.reset(); // Clear input field
+  document.body.classList.add("hide-header");
+  chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
+  setTimeout(showLoadingAnimation, 500); // Show loading animation after a delay
+}
+
+// Toggle between light and dark themes
+toggleThemeButton.addEventListener("click", () => {
+  const isLightMode = document.body.classList.toggle("light_mode");
+  localStorage.setItem("themeColor", isLightMode ? "light_mode" : "dark_mode");
+  toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
 });
+
+// Delete all chats from local storage when button is clicked
+deleteChatButton.addEventListener("click", () => {
+  if (confirm("Are you sure you want to delete all the chats?")) {
+    localStorage.removeItem("saved-chats");
+    loadDataFromLocalstorage();
+  }
+});
+
+// Set userMessage and handle outgoing chat when a suggestion is clicked
+suggestions.forEach(suggestion => {
+  suggestion.addEventListener("click", () => {
+    userMessage = suggestion.querySelector(".text").innerText;
+    handleOutgoingChat();
+  });
+});
+
+// Prevent default form submission and handle outgoing chat
+typingForm.addEventListener("submit", (e) => {
+  e.preventDefault(); 
+  handleOutgoingChat();
+});
+
+loadDataFromLocalstorage();
 
 </script>
 </body>
