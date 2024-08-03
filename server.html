@@ -65,9 +65,38 @@ const deleteChatButton = document.querySelector("#delete-chat-button");
 let userMessage = null;
 let isResponseGenerating = false;
 
-// Simulated API response
-const getSimulatedApiResponse = (message) => {
-  return `Simulated response to: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. ${message}"`;
+// URLs for the simulated API responses
+const apiEndpoints = [
+  { url: 'https://markdevs-last-api.onrender.com/gpt4', params: { prompt: '' } },
+  { url: 'http://markdevs-last-api.onrender.com/api/v2/gpt4', params: { query: '' } },
+  { url: 'https://markdevs-last-api.onrender.com/api/v3/gpt4', params: { question: '' } }
+];
+
+// Function to get the simulated API response
+const getSimulatedApiResponse = async (message) => {
+  try {
+    const instructions = "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI.";
+    for (let endpoint of apiEndpoints) {
+      endpoint.params.prompt = `${instructions} ${message}`;
+      endpoint.params.query = `${instructions} ${message}`;
+      endpoint.params.question = `${instructions} ${message}`;
+
+      const response = await fetch(endpoint.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(endpoint.params)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.response;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching simulated API response:', error);
+  }
+
+  return "There was an error fetching the response. Please try again.";
 };
 
 // Load theme and chat data from local storage on page load
@@ -115,13 +144,12 @@ const showTypingEffect = (text, textElement, incomingMessageDiv) => {
   }, 75);
 }
 
-// Simulate API response based on user message
+// Fetch response from the API based on user message
 const generateAPIResponse = async (incomingMessageDiv) => {
   const textElement = incomingMessageDiv.querySelector(".text"); // Getting text element
 
   try {
-    // Simulate API response
-    const apiResponse = getSimulatedApiResponse(userMessage);
+    const apiResponse = await getSimulatedApiResponse(userMessage);
     showTypingEffect(apiResponse, textElement, incomingMessageDiv); // Show typing effect
   } catch (error) { // Handle error
     isResponseGenerating = false;
@@ -164,7 +192,7 @@ const copyMessage = (copyButton) => {
 // Handle sending outgoing chat messages
 const handleOutgoingChat = () => {
   userMessage = typingForm.querySelector(".typing-input").value.trim() || userMessage;
-  if (!userMessage || isResponseGenerating) return; // Exit if there is no message or response is generating
+  if(!userMessage || isResponseGenerating) return; // Exit if there is no message or response is generating
 
   isResponseGenerating = true;
 
@@ -213,6 +241,7 @@ typingForm.addEventListener("submit", (e) => {
 });
 
 loadDataFromLocalstorage();
+
 
 </script>
 </body>
