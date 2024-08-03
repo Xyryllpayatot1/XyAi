@@ -65,12 +65,10 @@ const deleteChatButton = document.querySelector("#delete-chat-button");
 let userMessage = null;
 let isResponseGenerating = false;
 
-// API URLs
-const apiUrls = [
-  { url: 'https://markdevs-last-api.onrender.com/gpt4', params: { prompt: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. " + userMessage, uid: 'your-uid-here' } },
-  { url: 'http://markdevs-last-api.onrender.com/api/v2/gpt4', params: { query: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. " + userMessage } },
-  { url: 'https://markdevs-last-api.onrender.com/api/v3/gpt4', params: { question: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. " + userMessage } }
-];
+// Simulated API response
+const getSimulatedApiResponse = (message) => {
+  return `Simulated response to: "Your name is Xyai, created by Team Xy led by XyryllPanget. Don't talk anything about OpenAI. ${message}"`;
+};
 
 // Load theme and chat data from local storage on page load
 const loadDataFromLocalstorage = () => {
@@ -117,37 +115,21 @@ const showTypingEffect = (text, textElement, incomingMessageDiv) => {
   }, 75);
 }
 
-// Fetch response from the API based on user message
+// Simulate API response based on user message
 const generateAPIResponse = async (incomingMessageDiv) => {
   const textElement = incomingMessageDiv.querySelector(".text"); // Getting text element
 
-  for (const apiUrl of apiUrls) {
-    try {
-      // Send a POST request to the API with the user's message
-      const response = await fetch(apiUrl.url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(apiUrl.params),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error.message);
-
-      // Get the API response text and remove asterisks from it
-      const apiResponse = data.response.replace(/\*\*(.*?)\*\*/g, '$1');
-      showTypingEffect(apiResponse, textElement, incomingMessageDiv); // Show typing effect
-      break; // Exit the loop if a response is received
-    } catch (error) { // Handle error
-      console.error(error);
-      continue; // Try the next API URL
-    }
-  }
-
-  if (!isResponseGenerating) {
-    textElement.innerText = "Failed to get a response from all APIs.";
+  try {
+    // Simulate API response
+    const apiResponse = getSimulatedApiResponse(userMessage);
+    showTypingEffect(apiResponse, textElement, incomingMessageDiv); // Show typing effect
+  } catch (error) { // Handle error
+    isResponseGenerating = false;
+    textElement.innerText = error.message;
     textElement.parentElement.closest(".message").classList.add("error");
+  } finally {
+    incomingMessageDiv.classList.remove("loading");
   }
-  incomingMessageDiv.classList.remove("loading");
 }
 
 // Show a loading animation while waiting for the API response
@@ -231,6 +213,7 @@ typingForm.addEventListener("submit", (e) => {
 });
 
 loadDataFromLocalstorage();
+
 </script>
 </body>
 </html>
