@@ -156,11 +156,11 @@
             return;
           } else {
             const okehAiResponse = {
-              message: "Okeh AI is here to assist you! Feel free to ask any questions you have. How can I help you today?",
+              message: "Xyai is here to assist you! Feel free to ask any questions you have. How can I help you today?",
               status: "success"
             };
             textElement.innerText = okehAiResponse.message;
-            addToChatHistory(okehAiResponse.message, "Okeh AI");
+            addToChatHistory(okehAiResponse.message, "Xyai");
             return;
           }
         }
@@ -172,7 +172,7 @@
             status: "success"
           };
           textElement.innerText = timeResponse.message;
-          addToChatHistory(timeResponse.message, "Okeh AI");
+          addToChatHistory(timeResponse.message, "Xyai");
           return;
         }
 
@@ -218,7 +218,7 @@
         isResponseGenerating = true;
 
         // Create a placeholder for the response
-        const incomingMessageDiv = createMessageElement('<div class="message-content"><img class="avatar" src="images/chatbot.jpg" alt="Okeh AI avatar"><p class="text"></p><span class="icon material-symbols-rounded">hourglass_top</span></div>', "incoming");
+        const incomingMessageDiv = createMessageElement('<div class="message-content"><img class="avatar" src="chatbot.jpg" alt="Xyai"><p class="text"></p><span class="icon material-symbols-rounded">hourglass_top</span></div>', "incoming");
         chatContainer.appendChild(incomingMessageDiv);
         chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
 
