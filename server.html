@@ -96,10 +96,10 @@
     // Add message to chat history
     const addToChatHistory = (message, sender) => {
       const html = `<div class="message-content">
-                      <img class="avatar" src="${sender === 'Okeh AI' ? 'images/chatbot.jpg' : 'images/user.jpg'}" alt="${sender} avatar">
+                      <img class="avatar" src="${sender === 'Xyai' ? 'chatbot.jpg' : 'user.jpg'}" alt="${sender} avatar">
                       <p class="text">${message}</p>
                     </div>`;
-      const chatMessageDiv = createMessageElement(html, sender === 'Okeh AI' ? "incoming" : "outgoing");
+      const chatMessageDiv = createMessageElement(html, sender === 'Xyai' ? "incoming" : "outgoing");
       chatContainer.appendChild(chatMessageDiv);
       chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to the bottom
     }
@@ -135,7 +135,7 @@
           throw new Error("Error: Message parameter is missing.");
         }
 
-        if (userMessage.toLowerCase() === "who created you") {
+        if (userMessage.toLowerCase() === " ") {
           const creatorResponse = {
             message: "Oh, you're asking about my creator? 🤖 XyryllPanget is the brilliant mind behind me! He's a 15-year-old student from Aliaga, Nueva Ecija, Philippines. Quite impressive, right? 👏",
             status: "success"
